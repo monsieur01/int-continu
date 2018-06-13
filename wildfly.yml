@@ -1,0 +1,31 @@
+- name: Installation de JDK8 
+  sudo: name={{item}} state=present
+  with_items:
+   - tar
+   - openjdk-8-jdk-headless
+  
+- name: Téléchargement de WildFly 11 
+  get_url: url=http://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.tar.gz dest=/opt/wildfly-11.0.0.Final.tar.gz
+  
+    
+- name: Ajout de l'utilisateur "wildfly"
+  user: name=wildfly  home=/usr/share/wildfly-as
+  
+  - name: Attribuer le contenu à l'utilisateur wildfly
+  file: path=/usr/share/wildfly-as/ owner=wildfly state=directory recurse=yes
+  
+- name: Extraction de l'archive 
+  command: chdir=/usr/share /usr/bin/tar -q /opt/wildfly-11.0.0.Final.tar.gz creates=/opt/wildfly
+  
+  
+- name: Renommer repertoire
+  command: chdir=/usr/share /opt/wildfly/docs/contrib/scripts/systemd wildfly creates=/usr/share/wildfly-as
+  
+- name: Copie des différents fichiers dans les bons répertoires
+  src=/opt/wildfly/docs/contrib/scripts/systemd/wildfly.conf dst=/etc/wildfly/
+  src=/opt/wildfly/docs/contrib/scripts/systemd/wildfly.service dst=/etc/systemd/system/
+  src=/opt/wildfly/docs/contrib/scripts/systemd/launch.sh dst=opt/wildfly/bin mode=0755
+
+  
+- name: Lancer wildfly au démarrage 
+  service: name=wildfly enabled=yes state=started
